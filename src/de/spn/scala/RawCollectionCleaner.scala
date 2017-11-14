@@ -16,7 +16,7 @@ object RawCollectionCleaner {
   }
 
   def getListOfRaws(dir: String): Unit = {
-    val files: List[ExtendedFile] = getListOfFiles(dir).map{ file: File => ExtendedFile.create(file) }
+    val files: List[ExtendedFile] = getListOfFiles(dir)
     val raws:  List[ExtendedFile] = files filter{ _.fileExtension == ".ARW" }
     val jpgs:  List[ExtendedFile] = files filter{ _.fileExtension == ".JPG" }
 
@@ -38,22 +38,27 @@ object RawCollectionCleaner {
   }
 
   def createChildTarget(sourceFile: ExtendedFile, childDir: String): ExtendedFile = {
-    val targetPath: String = childDir + "/" + sourceFile.fileNameWithExtension
-    val targetFile: File   = new File(sourceFile.absolutePath, targetPath)
+    val targetPath: String = ExtendedFile.concatPaths(sourceFile.getParent, childDir)
+    val targetFilePath: String = ExtendedFile.concatPaths(targetPath, sourceFile.fileNameWithExtension)
 
-    return ExtendedFile.create(targetFile)
+    return ExtendedFile.create(targetFilePath)
   }
 
   def moveFile(sourceFile: ExtendedFile, targetFile: ExtendedFile) {
-    Files.move(sourceFile.path, targetFile.path, StandardCopyOption.ATOMIC_MOVE)
+    // first create dir if not exist
+    if (!targetFile.parentDirExists) {
+      targetFile.getParentFile.createNewFile
+    }
+
+    Files.move(sourceFile.toPath, targetFile.toPath, StandardCopyOption.ATOMIC_MOVE)
   }
 
-  def getListOfFiles(dir: String):List[File] = {
-    val d = new File(dir)
-    if (d.exists && d.isDirectory) {
-        return d.listFiles.filter(_.isFile).toList
+  def getListOfFiles(sourceDir: String):List[ExtendedFile] = {
+    val dir = ExtendedFile.create(sourceDir)
+    if (dir.exists && dir.isDirectory) {
+        return dir.listExtendedFiles.filter(_.isFile).toList
     } else {
-        return List[File]()
+        return List[ExtendedFile]()
     }
   }
 }

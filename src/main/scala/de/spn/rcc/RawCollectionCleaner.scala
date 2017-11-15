@@ -1,4 +1,4 @@
-package de.spn.scala
+package de.spn.main.scala
 
 import java.io.File
 import java.nio.file.{Files, Path, StandardCopyOption}
